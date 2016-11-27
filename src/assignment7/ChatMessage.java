@@ -2,6 +2,7 @@ package assignment7;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -9,32 +10,39 @@ public class ChatMessage implements Serializable{
 
 	private static final long serialVersionUID = 2541508903015946103L;
 
-	static final int MESSAGE = 1, LOGIN = 2, LOGOUT = 3, USERLIST = 4,
-			GROUPREQUEST = 5, FRIENDREQUEST = 6, HISTORYREQUEST = 7;
+	static final int LOGIN = 1, SIGNUP = 4, CHANGEPWD = 5, MESSAGE = 6, SENDERR = 7,
+			GROUPMSG = 8, USERLIST = 9, GROUPREQUEST = 10, FRIENDREQUEST = 11,
+			FRIENDREQUESTACK = 12, HISTORYREQUEST = 2, LOGOUT = 3;
+	static final String SUCCESS = "1", FAIL = "2";
+	static final int TYPENUM = 12;
 	private int type;
 	private String timeStamp;
 	private List<String> user;
 	private List<String> message;
 
-	ChatMessage(int type, List<String> user, List<String> message) {
+	ChatMessage(int type, String u, String m){
+		this(type, new ArrayList<String>(), new ArrayList<String>());
+		user = new ArrayList<String>();
+		message = new ArrayList<String>();
+		if (u != null) user.add(u);
+		if (m != null) message.add(m);
+	}
+
+	ChatMessage(int type, List<String> ul, String m){
+//		this(type, ul, new ArrayList<String>());
+//		message.add(m);
+	}
+
+	ChatMessage(int type, List<String> ul, List<String> ml) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		if (user == null || message == null){
-			this.type = type;
-			return;
-		}
-		if (type <= 3 && type >= 1 && user.size() != message.size()){
-			this.type = -1;
-			System.err.println("Length of user and message does not match!");
-			return;
-		}
-		if (type < 1 || type > 7){
+		if (type < 1 || type > TYPENUM){
 			System.err.println("Invalid Type!");
 			return;
 		}
 		this.timeStamp = sdf.format(new Date());
 		this.type = type;
-		this.user = user;
-		this.message = message;
+		this.user = ul;
+		this.message = ml;
 	}
 
 	protected int getType() {
