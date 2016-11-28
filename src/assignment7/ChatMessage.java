@@ -4,15 +4,34 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChatMessage implements Serializable{
 
 	private static final long serialVersionUID = 2541508903015946103L;
 
-	static final int LOGIN = 1, SIGNUP = 4, CHANGEPWD = 5, MESSAGE = 6, SENDERR = 7,
-			GROUPMSG = 8, USERLIST = 9, GROUPREQUEST = 10, FRIENDREQUEST = 11,
-			FRIENDREQUESTACK = 12, HISTORYREQUEST = 2, LOGOUT = 3;
+	static final int LOGIN = 1, HISTORYREQUEST = 2, LOGOUT = 3, SIGNUP = 4,
+			CHANGEPWD = 5, MESSAGE = 6, SENDERR = 7, GROUPMSG = 8,
+			USERLIST = 9, GROUPREQUEST = 10, FRIENDREQUEST = 11, FRIENDREQUESTACK = 12;
+    private static final Map<Integer, String> typeMap;
+    static
+    {
+    	typeMap = new HashMap<Integer, String>();
+    	typeMap.put(1, "LOGIN");
+    	typeMap.put(2, "LOGIHISTORYREQUESTN");
+    	typeMap.put(3, "LOGOUT");
+    	typeMap.put(4, "SIGNUP");
+    	typeMap.put(5, "CHANGEPWD");
+    	typeMap.put(6, "MESSAGE");
+    	typeMap.put(7, "SENDERR");
+    	typeMap.put(8, "GROUPMSG");
+    	typeMap.put(9, "USERLIST");
+    	typeMap.put(10, "GROUPREQUEST");
+    	typeMap.put(11, "FRIENDREQUEST");
+    	typeMap.put(12, "FRIENDREQUESTACK");
+    }
 	static final String SUCCESS = "1", FAIL = "2";
 	static final int TYPENUM = 12;
 	private int type;
@@ -26,11 +45,6 @@ public class ChatMessage implements Serializable{
 		message = new ArrayList<String>();
 		if (u != null) user.add(u);
 		if (m != null) message.add(m);
-	}
-
-	ChatMessage(int type, List<String> ul, String m){
-//		this(type, ul, new ArrayList<String>());
-//		message.add(m);
 	}
 
 	ChatMessage(int type, List<String> ul, List<String> ml) {
@@ -59,6 +73,10 @@ public class ChatMessage implements Serializable{
 
 	protected List<String> getMessage() {
 		return message;
+	}
+
+	public String toString(){
+		return timeStamp + " Type: " + typeMap.get(type) + "\n" + user + "\n" + message;
 	}
 
 }
