@@ -28,6 +28,12 @@ public class ChatServer {
 		passwordMap = new ConcurrentHashMap<String, String>();
 		userGroupList = new ArrayList<ArrayList<String>>();
 		friendMap = new ConcurrentHashMap<String, ArrayList<String>>();
+		userList.add("a");
+		passwordMap.put("a", "aa");
+		userList.add("b");
+		passwordMap.put("b", "bb");
+		userList.add("c");
+		passwordMap.put("c", "cc");
 	}
 
 	public static void main(String[] args) {
@@ -47,17 +53,6 @@ public class ChatServer {
 			threadList.add(t);
 			t.start();
 			System.out.println("got a connection");
-		}
-	}
-
-	private synchronized void broadcast(ChatMessage msg) {
-		for (ServerThread t : threadList) {
-			int cnt = 0;
-			for (String s : msg.getUser()) {
-				if (s.equals(t.userName))
-					t.writeMsg(new ChatMessage(msg.getType(), t.userName, msg.getMessage().get(cnt)));
-				cnt++;
-			}
 		}
 	}
 
@@ -84,186 +79,185 @@ public class ChatServer {
 
 		public void run() {
 			boolean logout = false;
-			while (!logout) {
+			while (true) {
 				try {
 					msg = (ChatMessage) sInput.readObject();
 				} catch (Exception e) {
-					System.err.println(userName + " Exception reading Streams: " + e);
+					if (!logout)
+						System.err.println(userName + " Exception reading Streams: " + e);
 					continue;
 				}
 				// the messaage part of the ChatMessage
-				if (msg == null) continue;
+				if (msg == null)
+					continue;
+
+				ChatMessage msg1;
+				String u = (msg.getUser() == null || msg.getUser().isEmpty()) ? null : msg.getUser().get(0);
+				String m = (msg.getMessage() == null || msg.getMessage().isEmpty()) ? null : msg.getMessage().get(0);
+
+				System.out.println(msg);
+
+				List<String> ul = msg.getUser();
+				List<String> ml = msg.getMessage();
+				List<String> tmpList = new ArrayList<String>();
+				boolean hasGroup = false;
+
 				switch (msg.getType()) {
+
 				case ChatMessage.LOGIN:
-					System.out.println(msg.getTimeStamp()+" Type: LOGIN");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					String u = msg.getUser().get(0);
-					String m = msg.getMessage().get(0);
-					if (passwordMap.get(u) != null && passwordMap.get(u).equals(m) && !currentUserList.contains(u)){
+					if (passwordMap.get(u) != null && passwordMap.get(u).equals(m) && !currentUserList.contains(u)) {
 						userName = u;
 						currentUserList.add(userName);
 						userThreadMap.put(userName, this);
-						ChatMessage msg1 = new ChatMessage(ChatMessage.LOGIN,u,ChatMessage.SUCCESS);
+						msg1 = new ChatMessage(ChatMessage.LOGIN, u, ChatMessage.SUCCESS);
 						writeMsg(msg1);
-						System.out.println(u+" LOGIN SUCCESS!");
-					}
-					else {
-						ChatMessage msg1 = new ChatMessage(ChatMessage.LOGIN,u,ChatMessage.FAIL);
+						System.out.println(u + " LOGIN SUCCESS!");
+					} else {
+						msg1 = new ChatMessage(ChatMessage.LOGIN, u, ChatMessage.FAIL);
 						writeMsg(msg1);
-						System.out.println(u+" LOGIN ERROR!");
+						System.out.println(u + " LOGIN ERROR!");
 					}
 					break;
 				case ChatMessage.SIGNUP:
-					System.out.println(msg.getTimeStamp()+" Type: SIGNUP");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					String u1 = msg.getUser().get(0);
-					String m1 = msg.getMessage().get(0);
-					if (!passwordMap.containsKey(u1)){
-						userName = u1;
-						userList.add(u1);
-						passwordMap.put(u1, m1);
-						ChatMessage msg1 = new ChatMessage(ChatMessage.SIGNUP,u1,ChatMessage.SUCCESS);
+					if (!passwordMap.containsKey(u)) {
+						userName = u;
+						userList.add(u);
+						passwordMap.put(u, m);
+						msg1 = new ChatMessage(ChatMessage.SIGNUP, u, ChatMessage.SUCCESS);
 						writeMsg(msg1);
-						System.out.println(u1+ " SIGNUP SUCCESS!");
-					}
-					else {
-						ChatMessage msg1 = new ChatMessage(ChatMessage.SIGNUP,u1,ChatMessage.FAIL);
+						System.out.println(u + " SIGNUP SUCCESS!");
+					} else {
+						msg1 = new ChatMessage(ChatMessage.SIGNUP, u, ChatMessage.FAIL);
 						writeMsg(msg1);
-						System.out.println(u1+" SIGNUP ERROR!");
+						System.out.println(u + " SIGNUP ERROR!");
 					}
 					break;
 				case ChatMessage.CHANGEPWD:
-					System.out.println(msg.getTimeStamp()+" Type: CHANGEPWD");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					String u2 = msg.getUser().get(0);
-					String m2 = msg.getMessage().get(0);
-					if (passwordMap.containsKey(u2) && passwordMap.get(u2).equals(m2)){
-						userName = u2;
-						passwordMap.put(u2, msg.getMessage().get(1));
-						ChatMessage msg1 = new ChatMessage(ChatMessage.CHANGEPWD,u2,ChatMessage.SUCCESS);
+					if (passwordMap.containsKey(u) && passwordMap.get(u).equals(m)) {
+						userName = u;
+						passwordMap.put(u, msg.getMessage().get(1));
+						msg1 = new ChatMessage(ChatMessage.CHANGEPWD, u, ChatMessage.SUCCESS);
 						writeMsg(msg1);
-						System.out.println(u2+ " CHANGEPWD SUCCESS!");
-					}
-					else {
-						ChatMessage msg1 = new ChatMessage(ChatMessage.CHANGEPWD,u2,ChatMessage.FAIL);
+						System.out.println(u + " CHANGEPWD SUCCESS!");
+					} else {
+						msg1 = new ChatMessage(ChatMessage.CHANGEPWD, u, ChatMessage.FAIL);
 						writeMsg(msg1);
-						System.out.println(u2+" CHANGEPWD ERROR!");
+						System.out.println(u + " CHANGEPWD ERROR!");
 					}
 					break;
 				case ChatMessage.LOGOUT:
-					System.out.println(msg.getTimeStamp()+" Type: LOGOUT");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					boolean success = currentUserList.remove(msg.getUser().get(0));
-					if (!success){
-						ChatMessage msg1 = new ChatMessage(ChatMessage.LOGOUT,userName,ChatMessage.FAIL);
+					boolean success = false;
+					if (u != null)
+						success = currentUserList.remove(u);
+					if (!success) {
+						msg1 = new ChatMessage(ChatMessage.LOGOUT, userName, ChatMessage.FAIL);
 						writeMsg(msg1);
 						System.out.println("LOGOUT ERROR!");
-					}
-					else {
+					} else {
 						userThreadMap.remove(msg.getUser().get(0));
-						ChatMessage msg1 = new ChatMessage(ChatMessage.LOGOUT,userName,ChatMessage.SUCCESS);
+						msg1 = new ChatMessage(ChatMessage.LOGOUT, userName, ChatMessage.SUCCESS);
 						writeMsg(msg1);
 						System.out.println("LOGOUT SUCCESS!");
-//						logout = true;
+						userName = null;
+						logout = true;
 					}
 					break;
 				case ChatMessage.MESSAGE:
-					System.out.println(msg.getTimeStamp()+" Type: MESSAGE");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					String u3 = msg.getUser().get(0);
-					String m3 = msg.getMessage().get(0);
-					if (userThreadMap.containsKey(u3)){
-						ServerThread t = userThreadMap.get(u3);
-						ChatMessage msg1 = new ChatMessage(ChatMessage.MESSAGE,userName,m3);
+					if (userThreadMap.containsKey(u)) {
+						ServerThread t = userThreadMap.get(u);
+						msg1 = new ChatMessage(ChatMessage.MESSAGE, userName, m);
 						t.writeMsg(msg1);
-						System.out.println(userName + " to " + u3 + " MESSAGE SUCCESS!");
-					}
-					else {
-						ChatMessage msg1 = new ChatMessage(ChatMessage.MESSAGE,u3,ChatMessage.FAIL);
+						System.out.println(userName + " to " + u + " MESSAGE SUCCESS!");
+					} else {
+						msg1 = new ChatMessage(ChatMessage.SENDERR, u, ChatMessage.FAIL);
 						writeMsg(msg1);
-						System.out.println(userName + " to " + u3+" MESSAGE ERROR!");
+						System.out.println(userName + " to " + u + " MESSAGE ERROR!");
 					}
 					break;
 				case ChatMessage.GROUPMSG:
-					System.out.println(msg.getTimeStamp()+" Type: GROUPMSG");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					List<String> ul = msg.getUser();
-					String mg = msg.getMessage().get(0);
-					if (userGroupList.contains(ul)){
-						ChatMessage msg1 = new ChatMessage(ChatMessage.GROUPMSG,ul,mg);
-						for (String s: ul){
+					for (ArrayList<String> s : userGroupList) {
+						if (s.containsAll(ul) && ul.containsAll(s)) {
+							hasGroup = true;
+							break;
+						}
+					}
+					if (hasGroup) {
+						msg1 = new ChatMessage(ChatMessage.GROUPMSG, ul, ml);
+						for (String s : ul) {
+							ServerThread t = userThreadMap.get(s);
+							if (t != null && !s.equals(userName))
+								t.writeMsg(msg1);
+						}
+						System.out.println(ul + " GROUPMSG SUCCESS!");
+					} else {
+						tmpList.add(ChatMessage.FAIL);
+						msg1 = new ChatMessage(ChatMessage.SENDERR, ul, tmpList);
+						writeMsg(msg1);
+						System.out.println(ul + " GROUPMSG ERROR!");
+					}
+					break;
+				case ChatMessage.USERLIST: {
+					msg1 = new ChatMessage(ChatMessage.USERLIST, userList, new ArrayList<String>());
+					writeMsg(msg1);
+					System.out.println(userName + " USERLIST SUCCESS!");
+					break;
+				}
+				case ChatMessage.FRIENDREQUEST:
+					if (userThreadMap.containsKey(u) && (!friendMap.containsKey(u)
+							|| (friendMap.get(u) != null && !friendMap.get(u).contains(userName)))) {
+						ServerThread t = userThreadMap.get(u);
+						msg1 = new ChatMessage(ChatMessage.FRIENDREQUEST, userName, new String());
+						t.writeMsg(msg1);
+						System.out.println(u + " FRIENDREQUEST SUCCESS!");
+					} else {
+						msg1 = new ChatMessage(ChatMessage.FRIENDREQUEST, u, ChatMessage.FAIL);
+						writeMsg(msg1);
+						System.out.println(u + " FRIENDREQUEST ERROR!");
+					}
+					break;
+				case ChatMessage.FRIENDREQUESTACK:
+					if (userThreadMap.containsKey(u) && (!friendMap.containsKey(u)
+							|| (friendMap.get(u) != null && !friendMap.get(u).contains(userName)))) {
+						if (!friendMap.containsKey(u)) {
+							ml.add(userName);
+							friendMap.put(u, (ArrayList<String>) ml);
+							ml.clear();
+							ml.add(u);
+							friendMap.put(userName, (ArrayList<String>) ml);
+						} else {
+							friendMap.get(u).add(userName);
+							friendMap.get(userName).add(u);
+						}
+						ServerThread t = userThreadMap.get(u);
+						msg1 = new ChatMessage(ChatMessage.FRIENDREQUESTACK, userName, new String());
+						t.writeMsg(msg1);
+						System.out.println(u + " FRIENDREQUESTACK SUCCESS!");
+					} else {
+						System.out.println(u + " FRIENDREQUESTACK ERROR!");
+					}
+					break;
+				case ChatMessage.GROUPREQUEST:
+					for (ArrayList<String> s : userGroupList) {
+						if (s.containsAll(ul) && ul.containsAll(s)) {
+							hasGroup = true;
+							break;
+						}
+					}
+					if (!hasGroup) {
+						tmpList.add(ChatMessage.SUCCESS);
+						userGroupList.add((ArrayList<String>) ul);
+						msg1 = new ChatMessage(ChatMessage.GROUPREQUEST, ul, tmpList);
+						for (String s : ul) {
 							ServerThread t = userThreadMap.get(s);
 							if (t != null)
 								t.writeMsg(msg1);
 						}
-						System.out.println(ul+ " GROUPMSG SUCCESS!");
-					}
-					else {
-						ChatMessage msg1 = new ChatMessage(ChatMessage.GROUPMSG,ul,ChatMessage.FAIL);
+						System.out.println(ul + " GROUPREQUEST SUCCESS!");
+					} else {
+						tmpList.add(ChatMessage.FAIL);
+						msg1 = new ChatMessage(ChatMessage.GROUPREQUEST, ul, tmpList);
 						writeMsg(msg1);
-						System.out.println(ul+" GROUPMSG ERROR!");
-					}
-					break;
-				case ChatMessage.USERLIST:{
-					System.out.println(msg.getTimeStamp()+" Type: USERLIST");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					ChatMessage msg1 = new ChatMessage(ChatMessage.GROUPMSG,userList,new ArrayList<String>());
-					writeMsg(msg1);
-					System.out.println(userName+" USERLIST SUCCESS!");
-					break;
-				}
-				case ChatMessage.FRIENDREQUEST:
-					System.out.println(msg.getTimeStamp()+" Type: FRIENDREQUEST");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					String u4 = msg.getUser().get(0);
-					String m4 = msg.getMessage().get(0);
-					if (userThreadMap.containsKey(u4) && (!friendMap.containsKey(u4)
-							|| (friendMap.get(u4) != null && !friendMap.get(u4).contains(userName)))){
-						ServerThread t = userThreadMap.get(u4);
-						ChatMessage msg1 = new ChatMessage(ChatMessage.FRIENDREQUEST,userName,new String());
-						t.writeMsg(msg1);
-						System.out.println(u4+ " FRIENDREQUEST SUCCESS!");
-					}
-					else {
-						ChatMessage msg1 = new ChatMessage(ChatMessage.FRIENDREQUEST,u4,ChatMessage.FAIL);
-						writeMsg(msg1);
-						System.out.println(u4+" FRIENDREQUEST ERROR!");
-					}
-					break;
-				case ChatMessage.FRIENDREQUESTACK:
-					System.out.println(msg.getTimeStamp()+" Type: FRIENDREQUESTACK");
-					System.out.println(msg.getUser());
-					System.out.println(msg.getMessage());
-					String u5 = msg.getUser().get(0);
-					if (userThreadMap.containsKey(u5) && (!friendMap.containsKey(u5)
-							|| (friendMap.get(u5) != null && !friendMap.get(u5).contains(userName)))){
-						if (!friendMap.containsKey(u5)){
-							ArrayList<String> ml = new ArrayList<String>();
-							ml.add(userName);
-							friendMap.put(u5, ml);
-							ml.clear();
-							ml.add(u5);
-							friendMap.put(userName, ml);
-						}
-						else{
-							friendMap.get(u5).add(userName);
-							friendMap.get(userName).add(u5);
-						}
-						ServerThread t = userThreadMap.get(u5);
-						ChatMessage msg1 = new ChatMessage(ChatMessage.FRIENDREQUESTACK,userName,new String());
-						t.writeMsg(msg1);
-						System.out.println(u5+ " FRIENDREQUESTACK SUCCESS!");
-					}
-					else {
-						System.out.println(u5+" FRIENDREQUESTACK ERROR!");
+						System.out.println(ul + " GROUPREQUEST ERROR!");
 					}
 					break;
 				}
@@ -278,7 +272,7 @@ public class ChatServer {
 			}
 			try {
 				sOutput.writeObject(msg);
-				System.out.println(userName + " Message sent!");
+				System.out.println(" Message sent to " + userName);
 			} catch (IOException e) {
 				System.err.println("Error sending message to " + userName);
 			}
