@@ -11,10 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 public class ChatServer {
 	private List<ServerThread> threadList;
 	private List<String> userList;
-	private List<String> currentUserList;
+	static private List<String> currentUserList;
 	private Map<String, ServerThread> userThreadMap;
 	private Map<String, String> passwordMap;
 	private List<ArrayList<String>> userGroupList;
@@ -56,7 +59,14 @@ public class ChatServer {
 			System.out.println("got a connection");
 		}
 	}
-
+	
+	public static ObservableList<String> getUserList(){
+		ObservableList<String> ret = FXCollections.observableArrayList(currentUserList);
+		//ObservableList<String> ret = (ObservableList<String>) currentUserList;
+		return ret;
+	}
+	
+	
 	class ServerThread extends Thread {
 		Socket socket;
 		ObjectInputStream sInput;
@@ -77,7 +87,7 @@ public class ChatServer {
 			date = new Date().toString() + "\n";
 			System.out.println(date);
 		}
-
+		
 		public void run() {
 			boolean logout = false;
 			while (true) {
@@ -89,7 +99,7 @@ public class ChatServer {
 					continue;
 				}
 
-				// the messaage part of the ChatMessage
+				// the message part of the ChatMessage
 				if (msg == null)
 					continue;
 
