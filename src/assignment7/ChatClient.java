@@ -8,7 +8,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class ChatClient {
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
+public class ChatClient extends Application{
 
 	private ObjectInputStream sInput;
 	private ObjectOutputStream sOutput;
@@ -23,13 +34,60 @@ public class ChatClient {
 
 	public static void main(String[] args) {
 		try {
+			launch(args);
 			ChatClient c = new ChatClient();
 			c.run();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
+	
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		primaryStage.setTitle("Chat Client");
+		
+		//create buttons
+        Button forgotPassBtn = new Button();
+        Button newUserBtn = new Button();
+        TextField userNmTxt = new TextField ();
+        TextField passwdTxt = new TextField ();
+        
+        forgotPassBtn.setText("Forgot password?");
+        newUserBtn.setText("Create New Account");
+        userNmTxt.setText("Enter User name");
+        passwdTxt.setText("Enter Password");
+        
+        userNmTxt.setPrefWidth(200);
+        //userNmTxt.setSpan
+        passwdTxt.setPrefWidth(200);
+        
+        forgotPassBtn.setOnAction(new EventHandler<ActionEvent>() {
+ 
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("Pressed forgot passwd");
+            }
+        });
+        
+        GridPane grid = new GridPane();
+        grid.setVgap(10); 
+        grid.setHgap(10);
+        grid.setAlignment(Pos.CENTER);
+        grid.add(passwdTxt, 0, 0);  // specify where to add objects to gridpane 
+        grid.add(userNmTxt, 0, 1);  
+        grid.add(forgotPassBtn, 0,2);
+        grid.add(newUserBtn,1,2);
+        primaryStage.setScene(new Scene(grid, 350, 250));
+        primaryStage.show();
+        
+/*        StackPane root = new StackPane();
+        root.getChildren().add(forgotPassBtn);
+        root.getChildren().add(newUserBtn);
+        primaryStage.setScene(new Scene(root, 300, 250));
+        primaryStage.show();*/
+		
+	}
+	
 	public void run() throws Exception {
 		setUpNetworking();
 
@@ -303,4 +361,6 @@ public class ChatClient {
 			}
 		}
 	}
+
+
 }

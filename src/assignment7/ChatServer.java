@@ -32,6 +32,7 @@ public class ChatServer {
 
 	public static void main(String[] args) {
 		try {
+			
 			new ChatServer().setUpNetworking();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -91,7 +92,7 @@ public class ChatServer {
 					System.err.println(userName + " Exception reading Streams: " + e);
 					continue;
 				}
-				// the messaage part of the ChatMessage
+				// the message part of the ChatMessage
 				if (msg == null) continue;
 				switch (msg.getType()) {
 				case ChatMessage.LOGIN:
