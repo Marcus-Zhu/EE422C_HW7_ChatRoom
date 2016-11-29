@@ -7,9 +7,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javafx.util.Pair;
 
 public class ChatServer {
 	private List<ServerThread> threadList;
@@ -19,6 +22,7 @@ public class ChatServer {
 	private Map<String, String> passwordMap;
 	private List<ArrayList<String>> userGroupList;
 	private Map<String, ArrayList<String>> friendMap;
+	private Map<HashSet<String>, ArrayList<Pair<String,String>>> chatHistoryMap;
 
 	ChatServer() {
 		threadList = new ArrayList<ServerThread>();
@@ -28,6 +32,7 @@ public class ChatServer {
 		passwordMap = new ConcurrentHashMap<String, String>();
 		userGroupList = new ArrayList<ArrayList<String>>();
 		friendMap = new ConcurrentHashMap<String, ArrayList<String>>();
+		chatHistoryMap = new ConcurrentHashMap<HashSet<String>, ArrayList<Pair<String, String>>>();
 		userList.add("a");
 		passwordMap.put("a", "aa");
 		userList.add("b");
@@ -100,6 +105,10 @@ public class ChatServer {
 				List<String> ul = msg.getUser();
 				List<String> ml = msg.getMessage();
 				List<String> tmpList = new ArrayList<String>();
+
+				HashSet<String> pair = new HashSet<String>();
+				ArrayList<Pair<String, String>> msgHist = new ArrayList<Pair<String, String>>();
+
 				boolean hasGroup = false;
 
 				switch (msg.getType()) {
@@ -167,6 +176,18 @@ public class ChatServer {
 						ServerThread t = userThreadMap.get(u);
 						msg1 = new ChatMessage(ChatMessage.MESSAGE, userName, m);
 						t.writeMsg(msg1);
+						pair.add(u);
+						pair.add(userName);
+						if (chatHistoryMap.containsKey(pair)){
+							msgHist = chatHistoryMap.get(pair);
+							msgHist.add(new Pair<String, String>(u,m));
+							chatHistoryMap.put(pair, msgHist);
+						}
+						else{
+							msgHist.add(new Pair<String, String>(u,m));
+							chatHistoryMap.put(pair, msgHist);
+							System.out.println("New chat history!");
+						}
 						System.out.println(userName + " to " + u + " MESSAGE SUCCESS!");
 					} else {
 						msg1 = new ChatMessage(ChatMessage.SENDERR, u, ChatMessage.FAIL);
@@ -187,6 +208,23 @@ public class ChatServer {
 							ServerThread t = userThreadMap.get(s);
 							if (t != null && !s.equals(userName))
 								t.writeMsg(msg1);
+						}
+						for (int i = 0; i < ul.size(); i++){
+							pair.add(ul.get(i));
+							if (ml.get(i) != null){
+								u = ul.get(i);
+								m = ml.get(i);
+							}
+						}
+						if (chatHistoryMap.containsKey(pair)){
+							msgHist = chatHistoryMap.get(pair);
+							msgHist.add(new Pair<String, String>(u,m));
+							chatHistoryMap.put(pair, msgHist);
+						}
+						else{
+							msgHist.add(new Pair<String, String>(u,m));
+							chatHistoryMap.put(pair, msgHist);
+							System.out.println("New chat history!");
 						}
 						System.out.println(ul + " GROUPMSG SUCCESS!");
 					} else {
@@ -258,6 +296,19 @@ public class ChatServer {
 						msg1 = new ChatMessage(ChatMessage.GROUPREQUEST, ul, tmpList);
 						writeMsg(msg1);
 						System.out.println(ul + " GROUPREQUEST ERROR!");
+					}
+					break;
+				case ChatMessage.HISTORYREQUEST:
+					for (String s: ul){
+						pair.add(s);
+					}
+					if (chatHistoryMap.containsKey(pair)){
+						msg1 = new ChatMessage(ChatMessage.HISTORYREQUEST, ul, chatHistoryMap.get(pair));
+						writeMsg(msg1);
+						System.out.println(ul + " HISTORYREQUEST SUCCESS!");
+					}
+					else{
+						System.out.println(ul + " HISTORYREQUEST ERROR!");
 					}
 					break;
 				}

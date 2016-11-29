@@ -127,6 +127,24 @@ public class ChatClient
                         String msg = scanner.nextLine();
                         groupMessage(nl, msg);
                         break;
+                    case "hist":
+                        System.out.print("Username: ");
+                        nl = new ArrayList<String>();
+                        while(true)
+                        {
+                            name = scanner.nextLine();
+                            if (name.equals("END"))
+                                break;
+                            nl.add(name);
+                        };
+                        if (nl.size()==1)
+                        	requestHist(nl.get(0));
+                        else
+                        	requestHist(nl);
+                        break;
+                    default:
+                    	System.out.println("No command found!");
+                    	break;
                     }
                 }
             }
@@ -136,7 +154,7 @@ public class ChatClient
     private void setUpNetworking() throws Exception
     {
         @SuppressWarnings("resource")
-        Socket sock = new Socket("127.0.0.1", 4242);
+        Socket sock = new Socket("localhost", 4242);
         sInput  = new ObjectInputStream(sock.getInputStream());
         sOutput = new ObjectOutputStream(sock.getOutputStream());
         System.out.println("networking established");
@@ -202,6 +220,18 @@ public class ChatClient
         }
         ChatMessage msg = new ChatMessage(ChatMessage.GROUPMSG, target, ml);
         return writeMsg(msg);
+    }
+    public boolean requestHist(String user){
+        List<String> ul = new ArrayList<String>();
+        ul.add(user);
+        ul.add(userName);
+        ChatMessage msg = new ChatMessage(ChatMessage.HISTORYREQUEST, ul, new ArrayList<String>());
+    	return writeMsg(msg);
+    }
+    public boolean requestHist(List<String> users){
+    	users.add(userName);
+        ChatMessage msg = new ChatMessage(ChatMessage.HISTORYREQUEST, users, new ArrayList<String>());
+    	return writeMsg(msg);
     }
     public boolean getUserList()
     {
@@ -336,11 +366,9 @@ public class ChatClient
                 case ChatMessage.SENDERR:
                     break;
                 case ChatMessage.USERLIST:
-                {
                     serverUserList = msg.getUser();
-                    System.out.println(userName + " USERLIST SUCCESS! " + serverUserList);
+                    System.out.println(" USERLIST SUCCESS! ");
                     break;
-                }
                 case ChatMessage.FRIENDREQUEST:
                     friendRequest(u);
                     break;
@@ -348,6 +376,11 @@ public class ChatClient
                     friendList.add(u);
                     System.out.println(userName + " FRIENDREQUESTACK SUCCESS! " + u);
                     break;
+                case ChatMessage.HISTORYREQUEST:
+                    System.out.println("HISTORYREQUEST SUCCESS! ");
+                    System.out.println(msg.getMessage());
+                    System.out.println(msg.getHistory());
+                	break;
                 }
                 msg = null;
             }

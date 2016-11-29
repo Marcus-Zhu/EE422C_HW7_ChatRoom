@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.util.Pair;
+
 public class ChatMessage implements Serializable{
 
 	private static final long serialVersionUID = 2541508903015946103L;
@@ -38,6 +40,7 @@ public class ChatMessage implements Serializable{
 	private String timeStamp;
 	private List<String> user;
 	private List<String> message;
+	private List<String> history;
 
 	ChatMessage(int type, String u, String m){
 		this(type, new ArrayList<String>(), new ArrayList<String>());
@@ -59,6 +62,17 @@ public class ChatMessage implements Serializable{
 		this.message = ml;
 	}
 
+	public ChatMessage(int type, List<String> ul, ArrayList<Pair<String, String>> arrayList) {
+		this(type, new ArrayList<String>(), new ArrayList<String>());
+		this.user = ul;
+		message = new ArrayList<String>();
+		history = new ArrayList<String>();
+		for (Pair<String, String> p : arrayList){
+			message.add(p.getKey());
+			history.add(p.getValue());
+		}
+	}
+
 	protected int getType() {
 		return type;
 	}
@@ -73,6 +87,10 @@ public class ChatMessage implements Serializable{
 
 	protected List<String> getMessage() {
 		return message;
+	}
+
+	protected List<String> getHistory(){
+		return history;
 	}
 
 	public String toString(){
