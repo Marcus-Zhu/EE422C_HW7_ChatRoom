@@ -15,10 +15,15 @@ public class ChatClient {
     private String userName;
     //private List<String> serverUserList;
     public List<String> serverUserList;
-    boolean userListUpdated = false;
     private List<ArrayList<String>> groupList;
     private List<String> friendList;
     Scanner scanner;
+    
+    // flags/variables to communicate with ClientGUI.java
+    boolean userListUpdated = false;
+    boolean newUserMsg =false;
+    ChatMessage msg;
+    ChatMessage semaphoreMsg;
 
     public ChatClient()
     {
@@ -247,7 +252,7 @@ public class ChatClient {
             while(true)
             {
 
-                ChatMessage msg;
+                //ChatMessage msg;
                 try
                 {
                     msg = (ChatMessage) sInput.readObject();
@@ -322,6 +327,8 @@ public class ChatClient {
                 case ChatMessage.MESSAGE:
                     if (!u.equals(userName))
                         break;
+                    newUserMsg = true;
+                    semaphoreMsg = msg;
                     showMessage(u, m);
                     break;
                 case ChatMessage.GROUPMSG:
@@ -349,6 +356,7 @@ public class ChatClient {
                     System.out.println(userName + " FRIENDREQUESTACK SUCCESS! " + u);
                     break;
                 }
+                //
                 msg = null;
             }
         }
