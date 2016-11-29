@@ -13,7 +13,9 @@ public class ChatClient {
     private ObjectInputStream sInput;
     private ObjectOutputStream sOutput;
     private String userName;
-    private List<String> serverUserList;
+    //private List<String> serverUserList;
+    public List<String> serverUserList;
+    boolean userListUpdated = false;
     private List<ArrayList<String>> groupList;
     private List<String> friendList;
     Scanner scanner;
@@ -201,6 +203,7 @@ public class ChatClient {
     }
     public boolean getUserList()
     {
+    	userListUpdated = false;
         ChatMessage msg = new ChatMessage(ChatMessage.USERLIST, new String(), new String());
         return writeMsg(msg);
     }
@@ -265,7 +268,7 @@ public class ChatClient {
 
                 String u = (msg.getUser() == null || msg.getUser().isEmpty()) ? null : msg.getUser().get(0);
                 String m = (msg.getMessage() == null || msg.getMessage().isEmpty()) ? null : msg.getMessage().get(0);
-                System.out.println(msg);
+                System.out.println(msg);  //IMPORTANT!!!
                 switch(msg.getType())
                 {
                 case ChatMessage.LOGIN:
@@ -334,6 +337,7 @@ public class ChatClient {
                 case ChatMessage.USERLIST:
                 {
                     serverUserList = msg.getUser();
+                    userListUpdated = true;
                     System.out.println(userName + " USERLIST SUCCESS! " + serverUserList);
                     break;
                 }

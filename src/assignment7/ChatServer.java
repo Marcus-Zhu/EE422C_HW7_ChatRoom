@@ -16,12 +16,12 @@ import javafx.collections.ObservableList;
 
 public class ChatServer {
 	private List<ServerThread> threadList;
-	private List<String> userList;
-	static private List<String> currentUserList;
+	private List<String> userList; //contains list of all users who have signed up
+	static private List<String> currentUserList; //contains currently logged in users
 	private Map<String, ServerThread> userThreadMap;
-	private Map<String, String> passwordMap;
-	private List<ArrayList<String>> userGroupList;
-	private Map<String, ArrayList<String>> friendMap;
+	private Map<String, String> passwordMap; //key = user, value = password
+	private List<ArrayList<String>> userGroupList; //list of list. Each list a group of users that's req group chat
+	private Map<String, ArrayList<String>> friendMap; //key = 1 user, arrayList = their friends
 
 	ChatServer() {
 		threadList = new ArrayList<ServerThread>();

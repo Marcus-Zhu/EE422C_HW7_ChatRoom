@@ -1,6 +1,7 @@
 package assignment7;
 
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -42,7 +43,12 @@ public class ClientGUI extends Application{
         
         // drop down menu shows which clients available
         ChatServer server = new ChatServer(); //ISSUE HERE!!!
-        ObservableList<String> options= ChatServer.getUserList();
+        cc.getUserList();
+        while(!cc.userListUpdated);
+        //cc.serverUserList
+        //ObservableList<String> options= ChatServer.getUserList();
+        ObservableList<String> options = FXCollections.observableArrayList(cc.serverUserList);
+        //ObservableList<String> options= (ObservableList<String>) cc.serverUserList;
         ComboBox<String> cbMsgRecepient = new ComboBox<String>(options);
         GridPane.setColumnSpan(cbMsgRecepient, 3);
         
@@ -71,7 +77,9 @@ public class ClientGUI extends Application{
         btSend.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                System.out.println("Pressed send");
+            	String name = cbMsgRecepient.getValue();
+            	String msg = tfMsg.getText();
+            	cc.message(name, msg);
                 //cc.message();
                 //GridPane grid2 = new GridPane();
             }
